@@ -1,13 +1,15 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div class="container">
+  <h2 class="ui-title">
     <slot />
-  </div>
+  </h2>
 </template>
 
 <style scoped lang="scss">
-.container {
-  padding: 0 150px;
+.ui-title {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
 }
 </style>
