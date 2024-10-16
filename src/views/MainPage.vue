@@ -1,24 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 import BaseTitle from '@/components/ui/BaseTitle.vue'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import IpInputBlock from '@/modules/InputBlock/components/IpInputBlock.vue'
 import IpResultBlock from '@/modules/ResultBlock/components/IpResultBlock.vue'
 
-import type { IpResponse } from '@/models'
 import { ElSpace } from 'element-plus'
+import { useApiFetch } from '@/composables/fetchApis'
 
-const ips = ref<IpResponse[] | null>(null)
+const { ips, fetchApis } = useApiFetch()
+
+onMounted(fetchApis)
 </script>
 
 <template>
   <DefaultLayout>
     <ElSpace :size="32" :fill="true" :style="{ width: '100%' }">
-      <BaseTitle>Проверка IP</BaseTitle>
-      <IpInputBlock v-model:ips="ips" />
+      <div>
+        <BaseTitle>Проверка IP</BaseTitle>
+        <IpInputBlock :ips @fetch:apis="fetchApis" />
+      </div>
 
-      <BaseTitle>Результаты</BaseTitle>
-      <IpResultBlock v-if="ips?.length" :ips />
+      <div v-if="ips?.length">
+        <BaseTitle>Результаты</BaseTitle>
+        <IpResultBlock :ips />
+      </div>
     </ElSpace>
   </DefaultLayout>
 </template>

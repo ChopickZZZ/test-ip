@@ -1,38 +1,35 @@
 <script setup lang="ts">
-import { API_URL } from '@/constants'
 import type { IpResponse } from '@/models'
 import { ElButton, ElCard, ElInput } from 'element-plus'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
-type Emits = {
-  'update:ips': [IpResponse[]]
+type Props = {
+  ips: IpResponse[]
 }
 
+type Emits = {
+  'fetch:apis': [string]
+}
+
+const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const inputValue = ref('')
 const loading = ref(false)
 
-const clearInput = () => (inputValue.value = '')
-
-async function fetchApi() {
-  const ips = inputValue.value.split('\n').filter(Boolean)
-  const promises = ips.map(ip => fetch(API_URL + ip))
-
-  try {
-    const responses = await Promise.all(promises)
-    const data: IpResponse[] = await Promise.all(
-      responses.map(res => res.json()),
-    )
-
-    emit('update:ips', data)
-
-    clearInput()
-    loading.value = false
-  } catch (e) {
-    console.error(e)
-  }
+const fetchApis = () => {
+  emit('fetch:apis', inputValue.value)
 }
+
+watch(
+  () => props.ips,
+  ips => {
+    console.log('triggered')
+    if (!ips) return
+
+    inputValue.value = props.ips?.map(ip => ip.query).join('\n') ?? ''
+  },
+)
 </script>
 
 <template>
@@ -57,7 +54,7 @@ async function fetchApi() {
     <ElButton
       color="var(--primary-black-color)"
       :disabled="loading"
-      @click="fetchApi"
+      @click="fetchApis"
     >
       Начать проверку
     </ElButton>

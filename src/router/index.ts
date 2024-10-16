@@ -7,8 +7,13 @@ const router = createRouter({
     {
       path: '/',
       name: 'main',
-      component: MainPage
-    }
+      component: MainPage,
+    },
+    {
+      path: '/ip/:ip',
+      name: 'showIp',
+      component: () => import('@/views/ShowIpPage.vue'),
+    },
   ],
 })
 

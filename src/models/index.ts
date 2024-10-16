@@ -1,5 +1,6 @@
 export type IpResponse = {
   as: string
+  asname: string
   city: string
   country: string
   countryCode: string
@@ -13,4 +14,7 @@ export type IpResponse = {
   status: string
   timezone: string
   zip: string
+  mobile: boolean
+  proxy: boolean
+  hosting: boolean
 }

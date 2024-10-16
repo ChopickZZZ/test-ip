@@ -3,6 +3,8 @@ import ArrowRightIcon from '@/components/icons/ArrowRightIcon.vue'
 import SortIcon from '@/components/icons/SortIcon.vue'
 import TrashIcon from '@/components/icons/TrashIcon.vue'
 import type { IpResponse } from '@/models'
+import { debounce } from '@/utils/debounce'
+import { computed, ref, watch } from 'vue'
 import {
   ElCard,
   ElRow,
@@ -13,8 +15,6 @@ import {
   ElTableColumn,
   ElIcon,
 } from 'element-plus'
-import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 
 type Props = {
   ips: IpResponse[]
@@ -22,51 +22,67 @@ type Props = {
 
 const props = defineProps<Props>()
 
-const router = useRouter()
-const route = useRoute()
-
 const localIps = ref([...props.ips])
+const filteredIps = computed({
+  get() {
+    return localIps.value
+  },
+  set(val) {
+    localIps.value = val
+  },
+})
 
 const searchQuery = ref('')
 
-const updateSearchQuery = (value: string) => {
-  searchQuery.value = value
-
-  const query = value ? { search: value } : {}
-  router.replace({ name: route.name, query })
-}
-
 const removeIp = (row: IpResponse) => {
-  localIps.value = localIps.value.filter(ip => ip.query !== row.query)
+  filteredIps.value = filteredIps.value.filter(ip => ip.query !== row.query)
 }
 
-const filteredIps = computed(() => {
-  const normalizedSearchQuery = searchQuery.value.toLowerCase()
+watch(
+  () => props.ips,
+  ips => {
+    localIps.value = ips
+  },
+  { deep: true },
+)
 
-  return localIps.value.filter(ip => {
-    const isInIp = ip.query.toLowerCase().includes(normalizedSearchQuery)
-    const isInCountry = ip.country.toLowerCase().includes(normalizedSearchQuery)
-    const isInRegion = ip.region.toLowerCase().includes(normalizedSearchQuery)
+watch(
+  searchQuery,
+  debounce((value: string) => {
+    const normalizedSearchQuery = value.toLowerCase()
 
-    return isInIp || isInCountry || isInRegion
-  })
-})
+    filteredIps.value = localIps.value.filter(ip => {
+      const isInIp = ip.query.toLowerCase().includes(normalizedSearchQuery)
+      const isInCountry = ip.country
+        .toLowerCase()
+        .includes(normalizedSearchQuery)
+      const isInRegion = ip.region.toLowerCase().includes(normalizedSearchQuery)
+
+      return isInIp || isInCountry || isInRegion
+    })
+  }),
+)
 </script>
 
 <template>
   <ElCard class="ip-result">
     <h3 class="ip-result__title">Поиск по таблице</h3>
-    <ElRow :gutter="16" :style="{ height: '44px' }">
-      <ElCol :span="20">
+    <ElRow :gutter="16" :style="{ height: '44px', marginBottom: '24px' }">
+      <ElCol :span="22">
         <ElInput
-          :model-value="searchQuery"
-          :style="{ background: 'var(--light-blue-color)' }"
+          v-model="searchQuery"
+          :style="{ background: 'var(--light-blue-color)', height: '100%' }"
           placeholder="Что вы хотите найти?"
-          @update:model-value="updateSearchQuery"
         />
       </ElCol>
-      <ElCol :span="4">
-        <ElButton type="info" color="#ECF0F5">Найти</ElButton>
+      <ElCol :span="2">
+        <ElButton
+          type="info"
+          color="#ECF0F5"
+          :style="{ height: '100%', width: '100%' }"
+        >
+          Найти
+        </ElButton>
       </ElCol>
     </ElRow>
 
@@ -88,7 +104,7 @@ const filteredIps = computed(() => {
       </ElTableColumn>
       <ElTableColumn align="right">
         <template #default="{ row }">
-          <ElButton @click="removeIp(row)">
+          <ElButton link @click="removeIp(row)">
             <ElIcon size="20" color="var(--primary-color)">
               <TrashIcon />
             </ElIcon>
@@ -96,11 +112,16 @@ const filteredIps = computed(() => {
         </template>
       </ElTableColumn>
       <ElTableColumn align="right">
-        <ElButton>
-          <ElIcon size="20" color="var(--primary-color)">
-            <ArrowRightIcon />
-          </ElIcon>
-        </ElButton>
+        <template #default="{ row }">
+          <ElButton
+            link
+            @click="$router.push({ name: 'showIp', params: { ip: row.query } })"
+          >
+            <ElIcon size="20" color="var(--primary-color)">
+              <ArrowRightIcon />
+            </ElIcon>
+          </ElButton>
+        </template>
       </ElTableColumn>
     </ElTable>
   </ElCard>
