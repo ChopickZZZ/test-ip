@@ -16,16 +16,22 @@ const loading = ref(false)
 const clearInput = () => (inputValue.value = '')
 
 async function fetchApi() {
-  const ips = inputValue.value.split('\n')
-
+  const ips = inputValue.value.split('\n').filter(Boolean)
   const promises = ips.map(ip => fetch(API_URL + ip))
-  const responses = await Promise.all(promises)
-  const data: IpResponse[] = await Promise.all(responses.map(res => res.json()))
 
-  emit('update:ips', data)
+  try {
+    const responses = await Promise.all(promises)
+    const data: IpResponse[] = await Promise.all(
+      responses.map(res => res.json()),
+    )
 
-  clearInput()
-  loading.value = false
+    emit('update:ips', data)
+
+    clearInput()
+    loading.value = false
+  } catch (e) {
+    console.error(e)
+  }
 }
 </script>
 
